@@ -1,14 +1,8 @@
 /** @file
   EFI DHCP protocol implementation.
 
-Copyright (c) 2006 - 2018, Intel Corporation. All rights reserved.<BR>
-This program and the accompanying materials
-are licensed and made available under the terms and conditions of the BSD License
-which accompanies this distribution.  The full text of the license may be found at
-http://opensource.org/licenses/bsd-license.php
-
-THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+Copyright (c) 2006 - 2019, Intel Corporation. All rights reserved.<BR>
+SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -1648,12 +1642,9 @@ ON_EXIT:
   //
   NET_LIST_FOR_EACH_SAFE (Entry, Next, &DhcpSb->Children) {
     Instance = NET_LIST_USER_STRUCT (Entry, DHCP_PROTOCOL, Link);
-
-    if ((Instance != NULL) && (Instance->Token != NULL)) {
-      Instance->Timeout--;
-      if (Instance->Timeout == 0) {
-        PxeDhcpDone (Instance);
-      }
+    Instance->Timeout--;
+    if (Instance->Timeout == 0 && Instance->Token != NULL) {
+      PxeDhcpDone (Instance);
     }
   }
 

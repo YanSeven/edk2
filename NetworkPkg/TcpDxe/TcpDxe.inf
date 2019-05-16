@@ -5,21 +5,9 @@
 #  It might provide TCPv4 Protocol or TCPv6 Protocol or both of them that depends on which network
 #  stack has been loaded in system. This driver supports both IPv4 and IPv6 network stack.
 #
-#  Notes:
-#  1) This driver can't co-work with the Tcp4Dxe driver in MdeModulePkg.
-#  2) This driver includes more bug fixes and supports more features (e.g. IPv6, TCP Cancel
-#     function) than the Tcp4Dxe driver in MdeModulePkg. So, we recommend using this driver
-#     even though both of them can be used.
-#
 #  Copyright (c) 2009 - 2018, Intel Corporation. All rights reserved.<BR>
 #
-#  This program and the accompanying materials
-#  are licensed and made available under the terms and conditions of the BSD License
-#  which accompanies this distribution. The full text of the license may be found at
-#  http://opensource.org/licenses/bsd-license.php.
-#
-#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 

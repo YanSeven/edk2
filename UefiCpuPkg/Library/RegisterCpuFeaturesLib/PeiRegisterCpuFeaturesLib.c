@@ -2,13 +2,7 @@
   CPU Register Table Library functions.
 
   Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -68,15 +62,15 @@ GetCpuFeaturesData (
 /**
   Worker function to get MP PPI service pointer.
 
-  @return PEI PPI service pointer.
+  @return MP_SERVICES variable.
 **/
-EFI_PEI_MP_SERVICES_PPI *
-GetMpPpi (
+MP_SERVICES
+GetMpService (
   VOID
   )
 {
   EFI_STATUS                 Status;
-  EFI_PEI_MP_SERVICES_PPI    *CpuMpPpi;
+  MP_SERVICES                MpService;
 
   //
   // Get MP Services Protocol
@@ -85,29 +79,36 @@ GetMpPpi (
              &gEfiPeiMpServicesPpiGuid,
              0,
              NULL,
-             (VOID **)&CpuMpPpi
+             (VOID **)&MpService.Ppi
              );
   ASSERT_EFI_ERROR (Status);
-  return CpuMpPpi;
+  return MpService;
 }
 
 /**
   Worker function to return processor index.
 
+  @param  CpuFeaturesData    Cpu Feature Data structure.
+
   @return  The processor index.
 **/
 UINTN
 GetProcessorIndex (
-  VOID
+  IN CPU_FEATURES_DATA        *CpuFeaturesData
   )
 {
   EFI_STATUS                 Status;
   EFI_PEI_MP_SERVICES_PPI    *CpuMpPpi;
   UINTN                      ProcessorIndex;
 
-  CpuMpPpi = GetMpPpi ();
+  CpuMpPpi = CpuFeaturesData->MpService.Ppi;
 
-  Status = CpuMpPpi->WhoAmI(GetPeiServicesTablePointer (), CpuMpPpi, &ProcessorIndex);
+  //
+  // For two reasons which use NULL for WhoAmI:
+  // 1. This function will be called by APs and AP should not use PeiServices Table
+  // 2. Check WhoAmI implementation, this parameter will not be used.
+  //
+  Status = CpuMpPpi->WhoAmI(NULL, CpuMpPpi, &ProcessorIndex);
   ASSERT_EFI_ERROR (Status);
   return ProcessorIndex;
 }
@@ -130,8 +131,11 @@ GetProcessorInformation (
 {
   EFI_PEI_MP_SERVICES_PPI    *CpuMpPpi;
   EFI_STATUS                 Status;
+  CPU_FEATURES_DATA          *CpuFeaturesData;
 
-  CpuMpPpi = GetMpPpi ();
+  CpuFeaturesData = GetCpuFeaturesData ();
+  CpuMpPpi = CpuFeaturesData->MpService.Ppi;
+
   Status = CpuMpPpi->GetProcessorInfo (
                GetPeiServicesTablePointer(),
                CpuMpPpi,
@@ -160,17 +164,7 @@ StartupAPsWorker (
   CPU_FEATURES_DATA                    *CpuFeaturesData;
 
   CpuFeaturesData = GetCpuFeaturesData ();
-
-  //
-  // Get MP Services Protocol
-  //
-  Status = PeiServicesLocatePpi (
-             &gEfiPeiMpServicesPpiGuid,
-             0,
-             NULL,
-             (VOID **)&CpuMpPpi
-             );
-  ASSERT_EFI_ERROR (Status);
+  CpuMpPpi = CpuFeaturesData->MpService.Ppi;
 
   //
   // Wakeup all APs for data collection.
@@ -198,17 +192,10 @@ SwitchNewBsp (
 {
   EFI_STATUS                           Status;
   EFI_PEI_MP_SERVICES_PPI              *CpuMpPpi;
+  CPU_FEATURES_DATA                    *CpuFeaturesData;
 
-  //
-  // Get MP Services Protocol
-  //
-  Status = PeiServicesLocatePpi (
-             &gEfiPeiMpServicesPpiGuid,
-             0,
-             NULL,
-             (VOID **)&CpuMpPpi
-             );
-  ASSERT_EFI_ERROR (Status);
+  CpuFeaturesData = GetCpuFeaturesData ();
+  CpuMpPpi = CpuFeaturesData->MpService.Ppi;
 
   //
   // Wakeup all APs for data collection.
@@ -240,17 +227,10 @@ GetNumberOfProcessor (
 {
   EFI_STATUS                 Status;
   EFI_PEI_MP_SERVICES_PPI    *CpuMpPpi;
+  CPU_FEATURES_DATA          *CpuFeaturesData;
 
-  //
-  // Get MP Services Protocol
-  //
-  Status = PeiServicesLocatePpi (
-             &gEfiPeiMpServicesPpiGuid,
-             0,
-             NULL,
-             (VOID **)&CpuMpPpi
-             );
-  ASSERT_EFI_ERROR (Status);
+  CpuFeaturesData = GetCpuFeaturesData ();
+  CpuMpPpi = CpuFeaturesData->MpService.Ppi;
 
   //
   // Get the number of CPUs
@@ -283,7 +263,7 @@ CpuFeaturesInitialize (
 
   CpuFeaturesData = GetCpuFeaturesData ();
 
-  OldBspNumber = GetProcessorIndex();
+  OldBspNumber = GetProcessorIndex (CpuFeaturesData);
   CpuFeaturesData->BspNumber = OldBspNumber;
 
   //

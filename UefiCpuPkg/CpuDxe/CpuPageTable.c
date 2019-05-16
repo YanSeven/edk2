@@ -4,13 +4,7 @@
   Copyright (c) 2017, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2017, AMD Incorporated. All rights reserved.<BR>
 
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -1300,7 +1294,16 @@ PageFaultExceptionHandler (
   // Display ExceptionType, CPU information and Image information
   //
   DumpCpuContext (ExceptionType, SystemContext);
-  if (!NonStopMode) {
+  if (NonStopMode) {
+    //
+    // Set TF in EFLAGS
+    //
+    if (mPagingContext.MachineType == IMAGE_FILE_MACHINE_I386) {
+      SystemContext.SystemContextIa32->Eflags |= (UINT32)BIT8;
+    } else {
+      SystemContext.SystemContextX64->Rflags |= (UINT64)BIT8;
+    }
+  } else {
     CpuDeadLoop ();
   }
 }

@@ -3,13 +3,7 @@
 *
 *  Copyright (c) 2011-2016, ARM Limited. All rights reserved.
 *
-*  This program and the accompanying materials
-*  are licensed and made available under the terms and conditions of the BSD License
-*  which accompanies this distribution.  The full text of the license may be found at
-*  http://opensource.org/licenses/bsd-license.php
-*
-*  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+*  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
 **/
 
@@ -135,6 +129,11 @@ PopulateLevel2PageTable (
     case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
       PageAttributes = TT_DESCRIPTOR_PAGE_WRITE_BACK;
       break;
+    case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK_NONSHAREABLE:
+    case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK_NONSHAREABLE:
+      PageAttributes = TT_DESCRIPTOR_PAGE_WRITE_BACK;
+      PageAttributes &= ~TT_DESCRIPTOR_PAGE_S_SHARED;
+      break;
     case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH:
     case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_THROUGH:
       PageAttributes = TT_DESCRIPTOR_PAGE_WRITE_THROUGH;
@@ -239,6 +238,10 @@ FillTranslationTable (
     case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK:
       Attributes = TT_DESCRIPTOR_SECTION_WRITE_BACK(0);
       break;
+    case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK_NONSHAREABLE:
+      Attributes = TT_DESCRIPTOR_SECTION_WRITE_BACK(0);
+      Attributes &= ~TT_DESCRIPTOR_SECTION_S_SHARED;
+      break;
     case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH:
       Attributes = TT_DESCRIPTOR_SECTION_WRITE_THROUGH(0);
       break;
@@ -250,6 +253,10 @@ FillTranslationTable (
       break;
     case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
       Attributes = TT_DESCRIPTOR_SECTION_WRITE_BACK(1);
+      break;
+    case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK_NONSHAREABLE:
+      Attributes = TT_DESCRIPTOR_SECTION_WRITE_BACK(1);
+      Attributes &= ~TT_DESCRIPTOR_SECTION_S_SHARED;
       break;
     case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_THROUGH:
       Attributes = TT_DESCRIPTOR_SECTION_WRITE_THROUGH(1);
@@ -281,8 +288,8 @@ FillTranslationTable (
       PhysicalBase += TT_DESCRIPTOR_SECTION_SIZE;
       RemainLength -= TT_DESCRIPTOR_SECTION_SIZE;
     } else {
-      PageMapLength = MIN (RemainLength, TT_DESCRIPTOR_SECTION_SIZE) -
-                      (PhysicalBase % TT_DESCRIPTOR_SECTION_SIZE);
+      PageMapLength = MIN (RemainLength, TT_DESCRIPTOR_SECTION_SIZE -
+                                         (PhysicalBase % TT_DESCRIPTOR_SECTION_SIZE));
 
       // Case: Physical address aligned on the Section Size (1MB) && the length
       //       does not fill a section
@@ -731,6 +738,11 @@ ArmSetMemoryAttributes (
   UINT64        ChunkLength;
   BOOLEAN       FlushTlbs;
 
+  if (BaseAddress > (UINT64)MAX_ADDRESS) {
+    return EFI_UNSUPPORTED;
+  }
+
+  Length = MIN (Length, (UINT64)MAX_ADDRESS - BaseAddress + 1);
   if (Length == 0) {
     return EFI_SUCCESS;
   }

@@ -1,15 +1,9 @@
 ## @file
 #  Security Module Package for All Architectures.
 #
-# Copyright (c) 2009 - 2018, Intel Corporation. All rights reserved.<BR>
+# Copyright (c) 2009 - 2019, Intel Corporation. All rights reserved.<BR>
 # (C) Copyright 2015 Hewlett Packard Enterprise Development LP<BR>
-# This program and the accompanying materials
-# are licensed and made available under the terms and conditions of the BSD License
-# which accompanies this distribution. The full text of the license may be found at
-# http://opensource.org/licenses/bsd-license.php
-#
-# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-# WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+# SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
@@ -72,6 +66,17 @@
   TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
   TcgStorageOpalLib|SecurityPkg/Library/TcgStorageOpalLib/TcgStorageOpalLib.inf
   ResetSystemLib|MdeModulePkg/Library/BaseResetSystemLibNull/BaseResetSystemLibNull.inf
+
+[LibraryClasses.ARM]
+  #
+  # It is not possible to prevent the ARM compiler for generic intrinsic functions.
+  # This library provides the instrinsic functions generate by a given compiler.
+  # And NULL mean link this library into all ARM images.
+  #
+  NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+
+  # Add support for GCC stack protector
+  NULL|MdePkg/Library/BaseStackCheckLib/BaseStackCheckLib.inf
 
 [LibraryClasses.common.PEIM]
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
@@ -146,8 +151,6 @@
   SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
   #SecurityPkg/Library/DxeDeferImageLoadLib/DxeDeferImageLoadLib.inf
   SecurityPkg/Library/DxeImageAuthenticationStatusLib/DxeImageAuthenticationStatusLib.inf
-  #SecurityPkg/UserIdentification/UserIdentifyManagerDxe/UserIdentifyManagerDxe.inf
-  #SecurityPkg/UserIdentification/UserProfileManagerDxe/UserProfileManagerDxe.inf
 
   #
   # TPM
@@ -200,8 +203,6 @@
   SecurityPkg/Library/AuthVariableLib/AuthVariableLib.inf
 
 [Components.IA32, Components.X64]
-#  SecurityPkg/UserIdentification/PwdCredentialProviderDxe/PwdCredentialProviderDxe.inf
-#  SecurityPkg/UserIdentification/UsbCredentialProviderDxe/UsbCredentialProviderDxe.inf
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
 
   #
@@ -279,6 +280,12 @@
   #
   SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
   SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+
+  #
+  # HDD Password solution
+  #
+  SecurityPkg/HddPassword/HddPasswordDxe.inf
+  SecurityPkg/HddPassword/HddPasswordPei.inf
 
 [BuildOptions]
    MSFT:*_*_IA32_DLINK_FLAGS = /ALIGN:256

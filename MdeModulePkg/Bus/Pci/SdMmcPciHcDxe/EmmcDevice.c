@@ -1,14 +1,9 @@
 /** @file
   This file provides some helper functions which are specific for EMMC device.
 
+  Copyright (c) 2018, NVIDIA CORPORATION. All rights reserved.
   Copyright (c) 2015 - 2016, Intel Corporation. All rights reserved.<BR>
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -641,7 +636,7 @@ EmmcSwitchBusWidth (
 }
 
 /**
-  Switch the clock frequency to the specified value.
+  Switch the bus timing and clock frequency.
 
   Refer to EMMC Electrical Standard Spec 5.1 Section 6.6 and SD Host Controller
   Simplified Spec 3.0 Figure 3-3 for details.
@@ -659,7 +654,7 @@ EmmcSwitchBusWidth (
 
 **/
 EFI_STATUS
-EmmcSwitchClockFreq (
+EmmcSwitchBusTiming (
   IN EFI_PCI_IO_PROTOCOL                *PciIo,
   IN EFI_SD_MMC_PASS_THRU_PROTOCOL      *PassThru,
   IN UINT8                              Slot,
@@ -688,28 +683,29 @@ EmmcSwitchClockFreq (
 
   Status = EmmcSwitch (PassThru, Slot, Access, Index, Value, CmdSet);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "EmmcSwitchClockFreq: Switch to hstiming %d fails with %r\n", HsTiming, Status));
+    DEBUG ((DEBUG_ERROR, "EmmcSwitchBusTiming: Switch to hstiming %d fails with %r\n", HsTiming, Status));
+    return Status;
+  }
+
+  //
+  // Convert the clock freq unit from MHz to KHz.
+  //
+  Status = SdMmcHcClockSupply (PciIo, Slot, ClockFreq * 1000, Private->BaseClkFreq[Slot], Private->ControllerVersion[Slot]);
+  if (EFI_ERROR (Status)) {
     return Status;
   }
 
   Status = EmmcSendStatus (PassThru, Slot, Rca, &DevStatus);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "EmmcSwitchClockFreq: Send status fails with %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "EmmcSwitchBusTiming: Send status fails with %r\n", Status));
     return Status;
   }
   //
   // Check the switch operation is really successful or not.
   //
   if ((DevStatus & BIT7) != 0) {
-    DEBUG ((DEBUG_ERROR, "EmmcSwitchClockFreq: The switch operation fails as DevStatus is 0x%08x\n", DevStatus));
+    DEBUG ((DEBUG_ERROR, "EmmcSwitchBusTiming: The switch operation fails as DevStatus is 0x%08x\n", DevStatus));
     return EFI_DEVICE_ERROR;
-  }
-  //
-  // Convert the clock freq unit from MHz to KHz.
-  //
-  Status = SdMmcHcClockSupply (PciIo, Slot, ClockFreq * 1000, Private->BaseClkFreq[Slot]);
-  if (EFI_ERROR (Status)) {
-    return Status;
   }
 
   if (mOverride != NULL && mOverride->NotifyPhase != NULL) {
@@ -798,7 +794,7 @@ EmmcSwitchToHighSpeed (
   }
 
   HsTiming = 1;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+  Status = EmmcSwitchBusTiming (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
 
   return Status;
 }
@@ -886,7 +882,7 @@ EmmcSwitchToHS200 (
   Status = SdMmcHcOrMmio (PciIo, Slot, SD_MMC_HC_CLOCK_CTRL, sizeof (ClockCtrl), &ClockCtrl);
 
   HsTiming = 2;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+  Status = EmmcSwitchBusTiming (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -936,7 +932,7 @@ EmmcSwitchToHS400 (
   // Set to Hight Speed timing and set the clock frequency to a value less than 52MHz.
   //
   HsTiming = 1;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, SdMmcMmcHsSdr, 52);
+  Status = EmmcSwitchBusTiming (PciIo, PassThru, Slot, Rca, HsTiming, SdMmcMmcHsSdr, 52);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -956,7 +952,7 @@ EmmcSwitchToHS400 (
   }
 
   HsTiming = 3;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+  Status = EmmcSwitchBusTiming (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
 
   return Status;
 }

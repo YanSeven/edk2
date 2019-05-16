@@ -5,13 +5,7 @@
   Copyright (c) 2014, ARM Ltd. All rights reserved.<BR>
   Copyright (c) 2004 - 2018, Intel Corporation. All rights reserved.<BR>
 
-  This program and the accompanying materials are licensed and made available
-  under the terms and conditions of the BSD License which accompanies this
-  distribution. The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS, WITHOUT
-  WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -20,6 +14,7 @@
 #include <Library/BootLogoLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/PcdLib.h>
+#include <Library/PlatformBmPrintScLib.h>
 #include <Library/QemuBootOrderLib.h>
 #include <Library/UefiBootManagerLib.h>
 #include <Protocol/DevicePath.h>
@@ -779,11 +774,11 @@ PlatformBootManagerBeforeConsole (
   Do the platform specific action after the console is ready
   Possible things that can be done in PlatformBootManagerAfterConsole:
   > Console post action:
-    > Dynamically switch output mode from 100x31 to 80x25 for certain senarino
+    > Dynamically switch output mode from 100x31 to 80x25 for certain scenario
     > Signal console ready platform customized event
   > Run diagnostics like memory testing
   > Connect certain devices
-  > Dispatch aditional option roms
+  > Dispatch additional option roms
   > Special boot: e.g.: USB boot, enter UI
 **/
 VOID
@@ -833,6 +828,8 @@ PlatformBootManagerAfterConsole (
 
   RemoveStaleFvFileOptions ();
   SetBootOrderFromQemu ();
+
+  PlatformBmPrintScRegisterHandler ();
 }
 
 /**

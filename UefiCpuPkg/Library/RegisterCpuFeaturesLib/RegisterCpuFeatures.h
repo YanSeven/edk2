@@ -1,19 +1,17 @@
 /** @file
   CPU Register Table Library definitions.
 
-  Copyright (c) 2017, Intel Corporation. All rights reserved.<BR>
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  Copyright (c) 2017 - 2019, Intel Corporation. All rights reserved.<BR>
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
 #ifndef _REGISTER_CPU_FEATURES_H_
 #define _REGISTER_CPU_FEATURES_H_
+#include <PiPei.h>
+#include <PiDxe.h>
+#include <Ppi/MpServices.h>
+#include <Protocol/MpService.h>
 
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
@@ -66,15 +64,18 @@ typedef struct {
   volatile UINT32          *PackageSemaphoreCount;  // Semaphore containers used to program Package semaphore.
 } PROGRAM_CPU_REGISTER_FLAGS;
 
+typedef union {
+  EFI_MP_SERVICES_PROTOCOL  *Protocol;
+  EFI_PEI_MP_SERVICES_PPI   *Ppi;
+} MP_SERVICES;
+
 typedef struct {
   UINTN                    FeaturesCount;
   UINT32                   BitMaskSize;
   LIST_ENTRY               FeatureList;
 
   CPU_FEATURES_INIT_ORDER  *InitOrder;
-  UINT8                    *SupportPcd;
   UINT8                    *CapabilityPcd;
-  UINT8                    *ConfigurationPcd;
   UINT8                    *SettingPcd;
 
   UINT32                   NumberOfCpus;
@@ -85,6 +86,8 @@ typedef struct {
   UINTN                    BspNumber;
 
   PROGRAM_CPU_REGISTER_FLAGS  CpuFlags;
+
+  MP_SERVICES              MpService;
 } CPU_FEATURES_DATA;
 
 #define CPU_FEATURE_ENTRY_FROM_LINK(a) \
@@ -108,11 +111,13 @@ GetCpuFeaturesData (
 /**
   Worker function to return processor index.
 
+  @param  CpuFeaturesData    Cpu Feature Data structure.
+
   @return  The processor index.
 **/
 UINTN
 GetProcessorIndex (
-  VOID
+  IN CPU_FEATURES_DATA        *CpuFeaturesData
   );
 
 /**
@@ -242,6 +247,16 @@ SetProcessorRegister (
 **/
 ACPI_CPU_DATA *
 GetAcpiCpuData (
+  VOID
+  );
+
+/**
+  Worker function to get MP service pointer.
+
+  @return MP_SERVICES variable.
+**/
+MP_SERVICES
+GetMpService (
   VOID
   );
 

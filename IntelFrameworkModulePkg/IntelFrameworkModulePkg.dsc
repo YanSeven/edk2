@@ -4,13 +4,7 @@
 # This file is used to build all modules in IntelFrameworkModulePkg.
 #
 #Copyright (c) 2007 - 2018, Intel Corporation. All rights reserved.<BR>
-#This program and the accompanying materials are licensed and made available under
-#the terms and conditions of the BSD License that accompanies this distribution.
-#The full text of the license may be found at
-#http://opensource.org/licenses/bsd-license.php.
-#
-# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-# WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
@@ -25,7 +19,7 @@
   PLATFORM_VERSION               = 0.96
   DSC_SPECIFICATION              = 0x00010005
   OUTPUT_DIRECTORY               = Build/IntelFrameworkModuleAll
-  SUPPORTED_ARCHITECTURES        = IA32|X64|EBC|ARM
+  SUPPORTED_ARCHITECTURES        = IA32|X64|EBC|ARM|AARCH64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
 
@@ -76,6 +70,17 @@
   UefiRuntimeLib|MdePkg/Library/UefiRuntimeLib/UefiRuntimeLib.inf
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
 
+[LibraryClasses.ARM, LibraryClasses.AARCH64]
+  #
+  # It is not possible to prevent the ARM compiler for generic intrinsic functions.
+  # This library provides the instrinsic functions generate by a given compiler.
+  # And NULL mean link this library into all ARM images.
+  #
+  NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
+
+  # Add support for GCC stack protector
+  NULL|MdePkg/Library/BaseStackCheckLib/BaseStackCheckLib.inf
+
 [LibraryClasses.common.PEIM]
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
   PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
@@ -108,7 +113,6 @@
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0xE0000000
 
 [Components]
-  IntelFrameworkModulePkg/Library/BaseUefiTianoCustomDecompressLib/BaseUefiTianoCustomDecompressLib.inf
   IntelFrameworkModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
   IntelFrameworkModulePkg/Library/PeiS3Lib/PeiS3Lib.inf
   IntelFrameworkModulePkg/Library/PeiRecoveryLib/PeiRecoveryLib.inf

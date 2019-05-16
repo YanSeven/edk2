@@ -9,13 +9,7 @@
   MicrocodeWrite() and VerifyMicrocode() will receive untrusted input and do basic validation.
 
   Copyright (c) 2016 - 2018, Intel Corporation. All rights reserved.<BR>
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -390,6 +384,7 @@ VerifyMicrocode (
   UINTN                                   DataSize;
   UINT32                                  CurrentRevision;
   PROCESSOR_INFO                          *ProcessorInfo;
+  UINT32                                  InCompleteCheckSum32;
   UINT32                                  CheckSum32;
   UINTN                                   ExtendedTableLength;
   UINT32                                  ExtendedTableCount;
@@ -488,6 +483,10 @@ VerifyMicrocode (
     }
     return EFI_VOLUME_CORRUPTED;
   }
+  InCompleteCheckSum32 = CheckSum32;
+  InCompleteCheckSum32 -= MicrocodeEntryPoint->ProcessorSignature.Uint32;
+  InCompleteCheckSum32 -= MicrocodeEntryPoint->ProcessorFlags;
+  InCompleteCheckSum32 -= MicrocodeEntryPoint->Checksum;
 
   //
   // Check ProcessorSignature/ProcessorFlags
@@ -518,11 +517,14 @@ VerifyMicrocode (
           //
           ExtendedTableCount = ExtendedTableHeader->ExtendedSignatureCount;
           if (ExtendedTableCount > (ExtendedTableLength - sizeof(CPU_MICROCODE_EXTENDED_TABLE_HEADER)) / sizeof(CPU_MICROCODE_EXTENDED_TABLE)) {
-            DEBUG((DEBUG_ERROR, "VerifyMicrocode - ExtendedTableCount too big\n"));
+            DEBUG((DEBUG_ERROR, "VerifyMicrocode - ExtendedTableCount %d is too big\n", ExtendedTableCount));
           } else {
             ExtendedTable = (CPU_MICROCODE_EXTENDED_TABLE *)(ExtendedTableHeader + 1);
             for (Index = 0; Index < ExtendedTableCount; Index++) {
-              CheckSum32 = CalculateSum32((UINT32 *)ExtendedTable, sizeof(CPU_MICROCODE_EXTENDED_TABLE));
+              CheckSum32 = InCompleteCheckSum32;
+              CheckSum32 += ExtendedTable->ProcessorSignature.Uint32;
+              CheckSum32 += ExtendedTable->ProcessorFlag;
+              CheckSum32 += ExtendedTable->Checksum;
               if (CheckSum32 != 0) {
                 DEBUG((DEBUG_ERROR, "VerifyMicrocode - The checksum for ExtendedTable entry with index 0x%x is incorrect\n", Index));
               } else {

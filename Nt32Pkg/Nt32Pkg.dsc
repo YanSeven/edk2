@@ -8,13 +8,7 @@
 # Copyright (c) 2015, Hewlett-Packard Development Company, L.P.<BR>
 # (C) Copyright 2016 Hewlett Packard Enterprise Development LP<BR>
 #
-#    This program and the accompanying materials
-#    are licensed and made available under the terms and conditions of the BSD License
-#    which accompanies this distribution. The full text of the license may be found at
-#    http://opensource.org/licenses/bsd-license.php
-#
-#    THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
@@ -126,7 +120,7 @@
   UefiHiiServicesLib|MdeModulePkg/Library/UefiHiiServicesLib/UefiHiiServicesLib.inf
   HiiLib|MdeModulePkg/Library/UefiHiiLib/UefiHiiLib.inf
   DevicePathLib|MdePkg/Library/UefiDevicePathLibDevicePathProtocol/UefiDevicePathLibDevicePathProtocol.inf
-  UefiDecompressLib|IntelFrameworkModulePkg/Library/BaseUefiTianoCustomDecompressLib/BaseUefiTianoCustomDecompressLib.inf
+  UefiDecompressLib|MdePkg/Library/BaseUefiDecompressLib/BaseUefiTianoCustomDecompressLib.inf
   PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
   PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
   DxeServicesLib|MdePkg/Library/DxeServicesLib/DxeServicesLib.inf
@@ -544,55 +538,4 @@
   DEBUG_*_*_DLINK_FLAGS = /EXPORT:InitializeDriver=$(IMAGE_ENTRY_POINT) /BASE:0x10000 /ALIGN:4096 /FILEALIGN:4096 /SUBSYSTEM:CONSOLE
   NOOPT_*_*_DLINK_FLAGS = /EXPORT:InitializeDriver=$(IMAGE_ENTRY_POINT) /BASE:0x10000 /ALIGN:4096 /FILEALIGN:4096 /SUBSYSTEM:CONSOLE
   RELEASE_*_*_DLINK_FLAGS = /ALIGN:4096 /FILEALIGN:4096
-
-#############################################################################################################
-# NOTE:
-# The following [Libraries] section is for building EDK module under the EDKII tool chain.
-# If you want build EDK module for Nt32 platform, please uncomment [Libraries] section and
-# libraries used by that EDK module.
-# Currently, Nt32 platform do not has any EDK style module
-#
-#
-#[Libraries]
-  #
-  # Libraries common to PEI and DXE
-  #
-  #  EdkCompatibilityPkg/Foundation/Efi/Guid/EfiGuidLib.inf
-  #  EdkCompatibilityPkg/Foundation/Framework/Guid/EdkFrameworkGuidLib.inf
-  #  EdkCompatibilityPkg/Foundation/Guid/EdkGuidLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/EfiCommonLib/EfiCommonLib.inf
-  #  EdkCompatibilityPkg/Foundation/Cpu/Pentium/CpuIA32Lib/CpuIA32Lib.inf
-  #  EdkCompatibilityPkg/Foundation/Cpu/Itanium/CpuIa64Lib/CpuIA64Lib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/CustomizedDecompress/CustomizedDecompress.inf
-  #  EdkCompatibilityPkg/Foundation/Library/CompilerStub/CompilerStubLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/Hob/HobLib.inf
-
-  #
-  # PEI libraries
-  #
-  #  EdkCompatibilityPkg/Foundation/Framework/Ppi/EdkFrameworkPpiLib.inf
-  #  EdkCompatibilityPkg/Foundation/Ppi/EdkPpiLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Pei/PeiLib/PeiLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Pei/Hob/PeiHobLib.inf
-
-  #
-  # DXE libraries
-  #
-  #  EdkCompatibilityPkg/Foundation/Core/Dxe/ArchProtocol/ArchProtocolLib.inf
-  #  EdkCompatibilityPkg/Foundation/Efi/Protocol/EfiProtocolLib.inf
-  #  EdkCompatibilityPkg/Foundation/Framework/Protocol/EdkFrameworkProtocolLib.inf
-  #  EdkCompatibilityPkg/Foundation/Protocol/EdkProtocolLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/EfiDriverLib/EfiDriverLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/RuntimeDxe/EfiRuntimeLib/EfiRuntimeLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/Graphics/Graphics.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/EfiIfrSupportLib/EfiIfrSupportLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/Print/PrintLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/EfiScriptLib/EfiScriptLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/EfiUiLib/EfiUiLib.inf
-
-  #
-  # Print/Graphics Library consume SetupBrowser Print Protocol
-  #
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/PrintLite/PrintLib.inf
-  #  EdkCompatibilityPkg/Foundation/Library/Dxe/GraphicsLite/Graphics.inf
 

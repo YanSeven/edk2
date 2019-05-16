@@ -1,14 +1,8 @@
 /** @file
   Header file for ACPI parser
 
-  Copyright (c) 2016 - 2018, ARM Limited. All rights reserved.
-  This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+  Copyright (c) 2016 - 2019, ARM Limited. All rights reserved.
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #ifndef ACPIPARSER_H_
@@ -649,6 +643,27 @@ ParseAcpiMadt (
 VOID
 EFIAPI
 ParseAcpiMcfg (
+  IN BOOLEAN Trace,
+  IN UINT8*  Ptr,
+  IN UINT32  AcpiTableLength,
+  IN UINT8   AcpiTableRevision
+  );
+
+/**
+  This function parses the ACPI PPTT table.
+  When trace is enabled this function parses the PPTT table and
+  traces the ACPI table fields.
+
+  This function also performs validation of the ACPI table fields.
+
+  @param [in] Trace              If TRUE, trace the ACPI fields.
+  @param [in] Ptr                Pointer to the start of the buffer.
+  @param [in] AcpiTableLength    Length of the ACPI table.
+  @param [in] AcpiTableRevision  Revision of the ACPI table.
+**/
+VOID
+EFIAPI
+ParseAcpiPptt (
   IN BOOLEAN Trace,
   IN UINT8*  Ptr,
   IN UINT32  AcpiTableLength,

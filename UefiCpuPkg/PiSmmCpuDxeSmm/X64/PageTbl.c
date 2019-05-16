@@ -1,16 +1,10 @@
 /** @file
 Page Fault (#PF) handler for X64 processors
 
-Copyright (c) 2009 - 2018, Intel Corporation. All rights reserved.<BR>
+Copyright (c) 2009 - 2019, Intel Corporation. All rights reserved.<BR>
 Copyright (c) 2017, AMD Incorporated. All rights reserved.<BR>
 
-This program and the accompanying materials
-are licensed and made available under the terms and conditions of the BSD License
-which accompanies this distribution.  The full text of the license may be found at
-http://opensource.org/licenses/bsd-license.php
-
-THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
@@ -22,6 +16,24 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 LIST_ENTRY                          mPagePool = INITIALIZE_LIST_HEAD_VARIABLE (mPagePool);
 BOOLEAN                             m1GPageTableSupport = FALSE;
 BOOLEAN                             mCpuSmmStaticPageTable;
+
+/**
+  Disable CET.
+**/
+VOID
+EFIAPI
+DisableCet (
+  VOID
+  );
+
+/**
+  Enable CET.
+**/
+VOID
+EFIAPI
+EnableCet (
+  VOID
+  );
 
 /**
   Check if 1-GByte pages is supported by processor or not.
@@ -821,6 +833,7 @@ SmiPFHandler (
     DumpCpuContext (InterruptType, SystemContext);
     DEBUG ((DEBUG_ERROR, "Do not support address 0x%lx by processor!\n", PFAddress));
     CpuDeadLoop ();
+    goto Exit;
   }
 
   //
@@ -855,6 +868,7 @@ SmiPFHandler (
       }
     }
     CpuDeadLoop ();
+    goto Exit;
   }
 
   //
@@ -869,6 +883,7 @@ SmiPFHandler (
         DumpModuleInfoByIp (*(UINTN *)(UINTN)SystemContext.SystemContextX64->Rsp);
       );
       CpuDeadLoop ();
+      goto Exit;
     }
 
     //
@@ -888,6 +903,7 @@ SmiPFHandler (
       }
 
       CpuDeadLoop ();
+      goto Exit;
     }
 
     if (mCpuSmmStaticPageTable && IsSmmCommBufferForbiddenAddress (PFAddress)) {
@@ -897,6 +913,7 @@ SmiPFHandler (
         DumpModuleInfoByIp ((UINTN)SystemContext.SystemContextX64->Rip);
       );
       CpuDeadLoop ();
+      goto Exit;
     }
   }
 
@@ -930,6 +947,7 @@ SetPageTableAttributes (
   UINT64                *L4PageTable;
   BOOLEAN               IsSplitted;
   BOOLEAN               PageTableSplitted;
+  BOOLEAN               CetEnabled;
 
   //
   // Don't do this if
@@ -961,6 +979,13 @@ SetPageTableAttributes (
   // Disable write protection, because we need mark page table to be write protected.
   // We need *write* page table memory, to mark itself to be *read only*.
   //
+  CetEnabled = ((AsmReadCr4() & CR4_CET_ENABLE) != 0) ? TRUE : FALSE;
+  if (CetEnabled) {
+    //
+    // CET must be disabled if WP is disabled.
+    //
+    DisableCet();
+  }
   AsmWriteCr0 (AsmReadCr0() & ~CR0_WP);
 
   do {
@@ -1013,6 +1038,42 @@ SetPageTableAttributes (
   // Enable write protection, after page table updated.
   //
   AsmWriteCr0 (AsmReadCr0() | CR0_WP);
+  if (CetEnabled) {
+    //
+    // re-enable CET.
+    //
+    EnableCet();
+  }
 
   return ;
+}
+
+/**
+  This function reads CR2 register when on-demand paging is enabled.
+
+  @param[out]  *Cr2  Pointer to variable to hold CR2 register value.
+**/
+VOID
+SaveCr2 (
+  OUT UINTN  *Cr2
+  )
+{
+  if (!mCpuSmmStaticPageTable) {
+    *Cr2 = AsmReadCr2 ();
+  }
+}
+
+/**
+  This function restores CR2 register when on-demand paging is enabled.
+
+  @param[in]  Cr2  Value to write into CR2 register.
+**/
+VOID
+RestoreCr2 (
+  IN UINTN  Cr2
+  )
+{
+  if (!mCpuSmmStaticPageTable) {
+    AsmWriteCr2 (Cr2);
+  }
 }

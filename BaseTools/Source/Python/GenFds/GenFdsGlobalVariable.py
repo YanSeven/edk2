@@ -3,13 +3,7 @@
 #
 #  Copyright (c) 2007 - 2018, Intel Corporation. All rights reserved.<BR>
 #
-#  This program and the accompanying materials
-#  are licensed and made available under the terms and conditions of the BSD License
-#  which accompanies this distribution.  The full text of the license may be found at
-#  http://opensource.org/licenses/bsd-license.php
-#
-#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 
 ##
@@ -35,6 +29,7 @@ import Common.DataType as DataType
 from Common.Misc import PathClass
 from Common.LongFilePathSupport import OpenLongFilePath as open
 from Common.MultipleWorkspace import MultipleWorkspace as mws
+import Common.GlobalData as GlobalData
 
 ## Global variables
 #
@@ -50,13 +45,11 @@ class GenFdsGlobalVariable:
     WorkSpace = None
     WorkSpaceDir = ''
     ConfDir = ''
-    EdkSourceDir = ''
     OutputDirFromDscDict = {}
     TargetName = ''
     ToolChainTag = ''
     RuleDict = {}
     ArchList = None
-    VtfDict = {}
     ActivePlatform = None
     FvAddressFileName = ''
     VerboseMode = False
@@ -341,7 +334,6 @@ class GenFdsGlobalVariable:
         GenFdsGlobalVariable.ToolChainTag = GlobalData.gGlobalDefines["TOOL_CHAIN_TAG"]
         GenFdsGlobalVariable.TargetName = GlobalData.gGlobalDefines["TARGET"]
         GenFdsGlobalVariable.ActivePlatform = GlobalData.gActivePlatform
-        GenFdsGlobalVariable.EdkSourceDir = GlobalData.gGlobalDefines["EDK_SOURCE"]
         GenFdsGlobalVariable.ConfDir  = GlobalData.gConfDirectory
         GenFdsGlobalVariable.EnableGenfdsMultiThread = GlobalData.gEnableGenfdsMultiThread
         for Arch in ArchList:
@@ -504,6 +496,10 @@ class GenFdsGlobalVariable:
 
             SaveFileOnChange(CommandFile, ' '.join(Cmd), False)
             if IsMakefile:
+                if GlobalData.gGlobalDefines.get("FAMILY") == "MSFT":
+                    Cmd = ['if', 'exist', Input[0]] + Cmd
+                else:
+                    Cmd = ['test', '-e', Input[0], "&&"] + Cmd
                 if ' '.join(Cmd).strip() not in GenFdsGlobalVariable.SecCmdList:
                     GenFdsGlobalVariable.SecCmdList.append(' '.join(Cmd).strip())
             elif GenFdsGlobalVariable.NeedsUpdate(Output, list(Input) + [CommandFile]):
@@ -545,7 +541,10 @@ class GenFdsGlobalVariable:
 
         Cmd += ("-o", Output)
         for I in range(0, len(Input)):
-            Cmd += ("-i", Input[I])
+            if MakefilePath:
+                Cmd += ("-oi", Input[I])
+            else:
+                Cmd += ("-i", Input[I])
             if SectionAlign and SectionAlign[I]:
                 Cmd += ("-n", SectionAlign[I])
 
@@ -725,8 +724,8 @@ class GenFdsGlobalVariable:
             return
         if PopenObject.returncode != 0 or GenFdsGlobalVariable.VerboseMode or GenFdsGlobalVariable.DebugLevel != -1:
             GenFdsGlobalVariable.InfLogger ("Return Value = %d" % PopenObject.returncode)
-            GenFdsGlobalVariable.InfLogger (out)
-            GenFdsGlobalVariable.InfLogger (error)
+            GenFdsGlobalVariable.InfLogger(out.decode(encoding='utf-8', errors='ignore'))
+            GenFdsGlobalVariable.InfLogger(error.decode(encoding='utf-8', errors='ignore'))
             if PopenObject.returncode != 0:
                 print("###", cmd)
                 EdkLogger.error("GenFds", COMMAND_FAILURE, errorMess)
@@ -758,7 +757,6 @@ class GenFdsGlobalVariable:
             return None
 
         Dict = {'$(WORKSPACE)': GenFdsGlobalVariable.WorkSpaceDir,
-                '$(EDK_SOURCE)': GenFdsGlobalVariable.EdkSourceDir,
 #                '$(OUTPUT_DIRECTORY)': GenFdsGlobalVariable.OutputDirFromDsc,
                 '$(TARGET)': GenFdsGlobalVariable.TargetName,
                 '$(TOOL_CHAIN_TAG)': GenFdsGlobalVariable.ToolChainTag,
